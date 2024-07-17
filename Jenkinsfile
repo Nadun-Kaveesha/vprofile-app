@@ -1,17 +1,24 @@
 pipeline {
 
     agent any
-/*
+
 	tools {
-        maven "maven3"
+        maven "MAVEN3"
     }
-*/
+
     environment {
-        registry = "kubeimran/vproappdock"
-        registryCredential = 'dockerhub'
+        registry = "nadun2005/vproappdock"
+        registryCredential = 'docker-cred'
     }
 
     stages{
+
+        stage('Checkout') {
+            steps {
+              echo 'Checking out code...'
+              git branch: 'main', credentialsId: 'GithubToken', url: 'https://github.com/Nadun-Kaveesha/vprofile-app.git'
+            }
+        }
 
         stage('BUILD'){
             steps {
@@ -51,11 +58,11 @@ pipeline {
         stage('CODE ANALYSIS with SONARQUBE') {
 
             environment {
-                scannerHome = tool 'mysonarscanner4'
+                SONAR_URL = "http://3.80.34.209:9000"
             }
 
             steps {
-                withSonarQubeEnv('sonar-pro') {
+                withCredentials([string(credentialsId: 'newultimatesonar', variable: 'SONAR_AUTH_TOKEN')]) {
                     sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
                    -Dsonar.projectName=vprofile-repo \
                    -Dsonar.projectVersion=1.0 \
@@ -97,10 +104,25 @@ pipeline {
           }
         }
 
-        stage('Kubernetes Deploy') {
-          agent {label 'KOPS'}
+
+
+        stage('Update Deployment File') {
+            environment {
+                GIT_REPO_NAME = "vprofile-manifest"
+                GIT_USER_NAME = "Nadun-Kaveesha"
+            }
             steps {
-              sh "helm upgrade --install --force vprofile-stack helm/vprofilecharts --set appimage=${registry}:V${BUILD_NUMBER} --namespace prod"
+                withCredentials([string(credentialsId: 'GithubToken', variable: 'GITHUB_TOKEN')]) {
+                    sh '''
+                        git config user.email "nadunkaveesha2018@gmail.com"
+                        git config user.name "Nadun-Kaveesha"
+                        BUILD_NUMBER=${BUILD_NUMBER}
+                        sed -i "s|appimage: .*|appimage: ${registry}:V${BUILD_NUMBER}|" vprofile-manifest/helm/vprofilecharts/values.yaml
+                        git add helm/vprofilecharts/values.yaml
+                        git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                    '''
+                }
             }
         }
     }
