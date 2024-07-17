@@ -13,6 +13,13 @@ pipeline {
 
     stages{
 
+        stage('Checkout') {
+            steps {
+              echo 'Checking out code...'
+              git branch: 'main', credentialsId: 'GithubToken', url: 'https://github.com/Nadun-Kaveesha/vprofile-app.git'
+            }
+        }
+
         stage('BUILD'){
             steps {
                 sh 'mvn clean install -DskipTests'
