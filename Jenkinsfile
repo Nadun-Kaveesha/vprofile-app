@@ -2,9 +2,9 @@ pipeline {
 
     agent any
 
-	tools {
+	/*tools {
         maven "MAVEN3"
-    }
+    }*/
 
     environment {
         registry = "nadun2005/vproappdock"
@@ -12,13 +12,6 @@ pipeline {
     }
 
     stages{
-
-        stage('Checkout') {
-            steps {
-              echo 'Checking out code...'
-              git branch: 'main', credentialsId: 'GithubToken', url: 'https://github.com/Nadun-Kaveesha/vprofile-app.git'
-            }
-        }
 
         stage('BUILD'){
             steps {
