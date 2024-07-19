@@ -2,9 +2,9 @@ pipeline {
 
     agent any
 
-	/*tools {
+	tools {
         maven "MAVEN3"
-    }*/
+    }
 
     environment {
         registry = "nadun2005/vproappdock"
